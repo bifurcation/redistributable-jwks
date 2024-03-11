@@ -65,7 +65,7 @@ Connect Discovery {{?OIDC-Discovery}}, the `iss` claim is used to form a URL
 from which issuer metadata is downloaded over HTTPS.  The issuer's JWK set is
 linked via the `jwks_uri` field in the metadata.  The SD-JWT-VC specification
 describes a similar HTTPS-based mechanism for discovering the valid keys for an
-issuer (see {{Section 5 of ?I-D.ietf-oauth-sd-jwt-vc-}}).
+issuer (see {{Section 5 of ?I-D.ietf-oauth-sd-jwt-vc}}).
 
 These HTTPS-based authority mechanisms are "live", in the sense that they can
 only prove the authority of a key to someone who does an HTTPS transaction with
@@ -91,15 +91,67 @@ documents such as OIDC Discovery metadata and SD-JWT-VC issuer metadata.
 
 ## Use Case: End-to-End Security
 
-[[ Context: Messaging/meeting + VC/MLS. Need redistributability to deal with availability concerns ]]
+In applications using MLS for end-to-end security, endpoints can authenticate to
+each other using Verifiable Credentials (VCs) {{?I-D.barnes-mls-addl-creds}}.
+These VCs are formatted as JWTs.  In such applications, HTTPS-based proof of
+authority is an availability risk to the application and to the VC issuer.
+
+The risk to the application is clear: A client joining an MLS group needs to
+validate the credentials of their peers.  If part of that process entails making
+an HTTPS query to validate the authority of the keys used to sign their peers'
+credentials, and the relevant HTTPS server is down, then the client will not be
+able to join the group and use the application.  Worse, since different peers
+may have credentials from different issuers, an outage at any one of those
+issuers can cause downtime for the application.
+
+The use of HTTPS to validate authority also creates unnecessary load on the VC
+issuer.  Consider, for example, an MLS-based video conference with 1,000
+participants presenting credentials from 10 different issuers, all of whom join
+at the start of the meeting.  This situation would create a spike of 10,000
+HTTPS requests to the VC issuer.
+
+With signed issuer keys, the clients in a meeting can bundle the proof of
+authority along with their VC, avoiding the need for any HTTPS interaction with
+the issuer at all.
 
 ## Use Case: Verifying Stored Signatures
 
-[[ Context: Long-term storage ~ timestamping authority.  E.g., container registries  Need redistributability to prove authority when verifying in the future ]]
+Some applications are interested in verifying historical signatures.  For
+example, a container registry might wish to demonstrate that a container was
+signed by its author a some time in the past.  
+
+Live HTTPS-based proofs of authority are fundamentally incompatible with these
+applications, since the proof of authority they produce cannot be preserved and
+reused later.  With signed issuer keys, a trusted timestamping authority is all
+that is needed to achieve the desired properties.
+
+Suppose the registry stores the following information for each container:
+
+* A signature by the container author over the container
+* A JWT attesting to the container author's identity and public key, e.g., a
+  Verifiable Credential or an OpenPubKey PKToken {{?OpenPubkey}}
+* A signed issuer key providing the JWT issuer's key and proving its authority
+  for the issuer
+* An assertion by the timestamping authority that all of the above artifacts
+  existed at a time in the past when they were all valid
+
+Based on the timetamping authority's assertion, a relying party can validate
+that at the specified time, the container was signed by an author with the
+specified identity, and that the identity was asserted by the specified issuer.
 
 ## Alternatives
 
-[[ Just put X5C in the base JWT ~ change to trust model, bloat in base JWTs ]]
+An alternative design discussed in {{Section 3.5 of ?I-D.ietf-oauth-sd-jwt-vc}}
+is to simply sign the based JWT with an X.509 certified keys.  This design has a
+few drawbacks relative to the signed issuer key design described here:
+
+First, it changes the trust model relative to HTTPS-based proof of authority.
+The issuer JWT-signing key is removed as an intermediate step.  This makes it
+more difficult for this design to coexist with HTTPS-based proof of identity.
+
+Second, it removes flexibility that allows for efficiency.  The extra data of
+the X.509 certificate chain has to be sent every time the base JWT is sent.
+Allowing the two to be decoupled allows for more flexible caching schemes.
 
 # Conventions and Definitions
 
