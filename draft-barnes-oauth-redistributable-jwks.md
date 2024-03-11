@@ -40,7 +40,7 @@ informative:
     target: https://openid.net/specs/openid-connect-discovery-1_0.html
     title: "OpenID Connect Discovery 1.0 incorporating errata set 2"
     date: 2023-12-15
-  OpenPubKey:
+  OpenPubkey:
     target: https://www.bastionzero.com/openpubkey
     title: "OpenPubkey"
 
@@ -67,7 +67,7 @@ issuer represented in the "iss" claim of the JWT.
 Today, relying parties commonly use the `iss` claim to fetch a set of authorized
 signing keys over HTTPS, relying on the security of HTTPS to establish the
 authority of the downloaded keys for that issuer.  For example, in OpenID
-Connect Discovery {{?OIDC-Discovery}}, the `iss` claim is used to form a URL
+Connect Discovery {{OIDC-Discovery}}, the `iss` claim is used to form a URL
 from which issuer metadata is downloaded over HTTPS.  The issuer's JWK set is
 linked via the `jwks_uri` field in the metadata.  The SD-JWT-VC specification
 describes a similar HTTPS-based mechanism for discovering the valid keys for an
@@ -135,7 +135,7 @@ Suppose the registry stores the following information for each container:
 
 * A signature by the container author over the container
 * A JWT attesting to the container author's identity and public key, e.g., a
-  Verifiable Credential or an OpenPubKey PKToken {{?OpenPubkey}}
+  Verifiable Credential or an OpenPubkey PKToken {{OpenPubkey}}
 * A signed issuer key providing the JWT issuer's key and proving its authority
   for the issuer
 * An assertion by the timestamping authority that all of the above artifacts
