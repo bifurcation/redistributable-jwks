@@ -36,7 +36,13 @@ author:
 normative:
 
 informative:
-
+  OIDC-Discovery:
+    target: https://openid.net/specs/openid-connect-discovery-1_0.html
+    title: "OpenID Connect Discovery 1.0 incorporating errata set 2"
+    date: 2023-12-15
+  OpenPubKey:
+    target: https://www.bastionzero.com/openpubkey
+    title: "OpenPubkey"
 
 --- abstract
 
