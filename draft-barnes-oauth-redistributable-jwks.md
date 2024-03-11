@@ -124,7 +124,7 @@ the issuer at all.
 
 Some applications are interested in verifying historical signatures.  For
 example, a container registry might wish to demonstrate that a container was
-signed by its author a some time in the past.  
+signed by its author a some time in the past.
 
 Live HTTPS-based proofs of authority are fundamentally incompatible with these
 applications, since the proof of authority they produce cannot be preserved and
