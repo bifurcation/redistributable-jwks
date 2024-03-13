@@ -52,7 +52,7 @@ in the "iss" claim of the JWT.  Today, relying parties commonly use the "iss"
 claim to fetch a set of authorized signing keys over HTTPS, relying on the
 security of HTTPS to establish the authority of the downloaded keys for that
 issuer.  The ephemerality of this proof of authority makes it unsuitable for
-certain use cases.  In this document, we define a format for signed issuer keys,
+certain use cases.  In this document, we define a format for Signed JWK Sets,
 which establish the authority of a key using a signed object instead of an HTTPS
 connection.
 
@@ -79,7 +79,7 @@ the relevant server.  The fact that the server needs to be reachable and
 responsive at the time the JWT is being validated is a serious limitation in
 some use cases, two examples of which are given below.
 
-In this document, we define "signed issuer keys", a format for a redistributable
+In this document, we define "Signed JWK Sets", a format for a redistributable
 proof of authority for an issuer key.  As in OIDC and SD-JWT-VC, we assume that
 issuers are identified by HTTPS URLs, or at least by domain names.  A signed
 issuer key is then simply a JWT whose payload contains the issuer key in
@@ -136,7 +136,7 @@ Suppose the registry stores the following information for each container:
 * A signature by the container author over the container
 * A JWT attesting to the container author's identity and public key, e.g., a
   Verifiable Credential or an OpenPubkey PKToken {{OpenPubkey}}
-* A signed issuer key providing the JWT issuer's key and proving its authority
+* A Signed JWK Set providing the JWT issuer's key and proving its authority
   for the issuer
 * An assertion by the timestamping authority that all of the above artifacts
   existed at a time in the past when they were all valid
@@ -149,7 +149,7 @@ specified identity, and that the identity was asserted by the specified issuer.
 
 An alternative design discussed in {{Section 3.5 of ?I-D.ietf-oauth-sd-jwt-vc}}
 is to simply sign the based JWT with an X.509 certified keys.  This design has a
-few drawbacks relative to the signed issuer key design described here:
+few drawbacks relative to the design described here:
 
 First, it changes the trust model relative to HTTPS-based proof of authority.
 The issuer JWT-signing key is removed as an intermediate step.  This makes it
@@ -163,22 +163,167 @@ Allowing the two to be decoupled allows for more flexible caching schemes.
 
 {::boilerplate bcp14-tagged}
 
-# Signed Issuer Keys
+# JWK Lifetimes
 
-[[ JWT with X5C ]]
+JWT issuers typically rotate their keys, so that each issuer key is only used to
+sign JWTs for a specific period of time.  Making this window known to Relying
+Parties can allow them guard against compromise of retired keys.  If a Relying
+Party has a reliable signal of when a JWT was produced (e.g., from a timestamp
+authority), and the Relying Party knows when the Issuer was using the key that
+signed the JWT, then the Relying Party can enforce that JWT signing time is
+within the key usage window.
 
-# Referencing Signed Issuer Keys
+To communicate this window, this document defines `nbf` and `exp` fields for
+JWKs with semantics analogous to the corresponding JWT claims.  
 
-[[ { kid: url } ]]
+## "nbf" (Not Before) Parameter 
+
+The `nbf` (not before) parameter identifies the time at which the holder of this
+key began using it.  When used with signature keys, relying parties MUST reject
+an object signed by this key if the object was signed before the time indicated
+in the `nbf` parameter.  Implementers MAY provide for some small leeway, usually
+no more than a few minutes, to account for clock skew.  Its value MUST be a
+number containing a NumericDate value.  Use of this parameter is OPTIONAL.
+
+## "exp" (Expiration Time) Parameter
+
+The `exp` (expiration time) parameter identifies the time at which the holder of
+this key stopped using it.  When used with signature keys, relying parties MUST
+reject an object signed by this key if the object was signed after the time
+indicated in the `exp` parameter. Implementers MAY provide for some small
+leeway, usually no more than a few minutes, to account for clock skew.  Its
+value MUST be a number containing a NumericDate value.  Use of this parameter is
+OPTIONAL.
+
+
+# Signed JWK Set Format
+
+A Signed JWK Set for a JWT issuer is a JWT of the following form:
+
+* The `iss` claim of the JWT MUST contain the `iss` value that the issuer uses
+  in JWTs that it issues.  This value MUST be either a domain name or an HTTPS
+  URL.
+
+* The `x5c` field of the JWT header MUST be populated with a certificate chain
+  that authenticates the domain name in the `iss` field.  The domain name MUST
+  appear as a `dNSName` entry in the `subjectAltName` extension of the
+  end-entity certificate.
+
+* The `alg` field of the JWT header MUST represent an algorithm that is
+  compatible with the subject public key of the certificate in the `x5c`
+  parameter.
+
+* The JWT SHOULD NOT contain an `aud` claim.
+
+* The JWT MUST contain a `nbf` and `exp` claims.
+
+* The JWT MUST conatin a `jwks` claim, whose value is the issuer's JWK Set.
+
+* The JWKs in the `jwks` JWK Set MAY contain `nbf` and `exp` fields, as
+  described in {{jwk-lifetimes}}.
+
+An example Signed JWK Set is as  (omitting the
+full certificate chain):
+
+~~~
+JWT Header:
+{
+  "alg": "ES256",
+  "typ": "JWT",
+  "x5c": ["MII..."]
+}
+
+JWT Payload:
+{
+  "iat": 1667575982,
+  "exp": 1668180782,
+  "iss": "https://server.example.com",
+  "jwks": {
+    "keys": [{
+      "kty": "EC",
+      "crv": "P-256",
+      "alg": "ES256",
+      "nbf": 1710362112,
+      "exp": 1718325296,
+      "kid": "XTSGmh734_J6fOWUbI7BNim7wyvj5LWx8GzuIH7WHw8",
+      "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
+      "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
+    }]
+  }
+}
+~~~
+{: #fig-example-jwks title="A Signed JWK Set" }
+
+A Verifier that receives such a signed JWK Set validates it by taking the
+following steps:
+
+1. If this Signed JWK Set was looked up using an `iss` value, verify that the
+   value of the `iss` claim in the Signed JWK Set is identical to the one used
+   to discover it.
+
+1. Verify that the JWT is currently valid, according to its `nbf` and `exp` claims.
+
+1. Verify that the certificate chain in the `x5c` field is currently valid from a trusted
+   certificate authority (see [@!RFC5280][@!RFC6125]).
+
+1. Verify that the end-entity certificate matches the `iss` field of the Signed
+   JWK Set.
+
+1. Verify the signature on the JWS using the subject public key of the
+   end-entity certificate
+
+# Referencing Signed JWK Sets
+
+JWT issuers commonly advertise their JWK Sets using mechanisms such as OpenID
+Connect Discovery or SD-JWT-VC Credential Issuer Metadata {{OIDC-Discovery}}
+{{I-D.ietf-oauth-sd-jwt-vc}}.  These discovery mechanisms could be extended to
+also provide Signed JWK Sets, using one of a few approaches.
+
+Current discovery mechanisms typically present the issuer's JWK set as a value
+or link embedded in the metadata object.  One could define parallel fields to
+reference a provider's current Signed JWK Set:
+
+~~~ json
+{
+    // Other metadata...
+
+    // Current mechanisms for unsigned JWKS
+    "jwks_uri": "https://example.com/jwks",
+    "jwks": { "keys": [ ... ] },
+
+    // New mechanisms for Signed JWK Sets
+    "signed_jwks_uri": "https://example.com/signed_jwks",
+    "signed_jwks": "eyJ...",
+}
+~~~
+
+Such a mechanism requires the issuer to list all of the keys that are currently
+valid in one Signed JWK Set, requiring a Relying Party to download the whole
+Signed JWK Set even if they are only interested in one key.
+
+An alternative design would allow for more specific Signed JWK Sets, covering
+individual keys and referencing them by `kid`:
+
+~~~ json
+{
+    // Other metadata...
+
+    "signed_jwks": {
+        "us-east-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+        "us-west-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+        "us-east-2024-04": "https://example.com/signed_jwks/us-east-2024-01",
+    }
+}
+~~~
 
 # Security Considerations
 
-TODO Security
+[[ TODO - Security; lifetimes, revocation ]]
 
 
 # IANA Considerations
 
-This document has no IANA actions.
+[[ TODO: Register `nbf` and `exp` as JWK fields ]]
 
 
 --- back
