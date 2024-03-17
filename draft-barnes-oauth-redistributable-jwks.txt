@@ -1,0 +1,458 @@
+
+
+
+
+Web Authorization Protocol                                  R. L. Barnes
+Internet-Draft                                                     Cisco
+Intended status: Informational                               S. Goldberg
+Expires: 18 September 2024                             BastionZero, Inc.
+                                                           17 March 2024
+
+
+                            Signed JWK Sets
+             draft-barnes-oauth-redistributable-jwks-latest
+
+Abstract
+
+   A relying party verifying a JSON Web Token (JWT) needs to verify that
+   the public key used to verify the signature legitimately represents
+   the issuer represented in the "iss" claim of the JWT.  Today, relying
+   parties commonly use the "iss" claim to fetch a set of authorized
+   signing keys over HTTPS, relying on the security of HTTPS to
+   establish the authority of the downloaded keys for that issuer.  The
+   ephemerality of this proof of authority makes it unsuitable for use
+   cases where a JWT might need to be verified for some time.  In this
+   document, we define a format for Signed JWK Sets, which establish the
+   authority of a key using a signed object instead of an HTTPS
+   connection.
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   The latest revision of this draft can be found at
+   https://bifurcation.github.io/redistributable-jwks/draft-barnes-
+   oauth-redistributable-jwks.html.  Status information for this
+   document may be found at https://datatracker.ietf.org/doc/draft-
+   barnes-oauth-redistributable-jwks/.
+
+   Discussion of this document takes place on the Web Authorization
+   Protocol Working Group mailing list (mailto:oauth@ietf.org), which is
+   archived at https://mailarchive.ietf.org/arch/browse/oauth/.
+   Subscribe at https://www.ietf.org/mailman/listinfo/oauth/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/bifurcation/redistributable-jwks.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 18 September 2024.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction
+     1.1.  Use Case: End-to-End Security
+     1.2.  Use Case: Verifying Stored Signatures
+     1.3.  Alternatives
+   2.  Conventions and Definitions
+   3.  JWK Lifetimes
+     3.1.  "nbf" (Not Before) Parameter
+     3.2.  "exp" (Expiration Time) Parameter
+   4.  Signed JWK Set Format
+   5.  Referencing Signed JWK Sets
+   6.  Security Considerations
+   7.  IANA Considerations
+   8.  References
+     8.1.  Normative References
+     8.2.  Informative References
+   Acknowledgments
+   Authors' Addresses
+
+1.  Introduction
+
+   A relying party verifying a JSON Web Token (JWT) [RFC7519] needs to
+   verify that the public key used to verify the signature legitimately
+   represents the issuer represented in the "iss" claim of the JWT.
+
+   Today, relying parties commonly use the iss claim to fetch a set of
+   authorized signing keys over HTTPS, relying on the security of HTTPS
+   to establish the authority of the downloaded keys for that issuer.
+   For example, in OpenID Connect Discovery [OIDC-Discovery], the iss
+   claim is used to form a URL from which issuer metadata is downloaded
+   over HTTPS.  The issuer's JWK set is linked via the jwks_uri field in
+   the metadata.  The SD-JWT-VC specification describes a similar HTTPS-
+   based mechanism for discovering the valid keys for an issuer (see
+   Section 5 of [I-D.ietf-oauth-sd-jwt-vc]).
+
+   These HTTPS-based authority mechanisms are "live", in the sense that
+   they can only prove the authority of a key to someone who does an
+   HTTPS transaction with the relevant server.  The fact that the server
+   needs to be reachable and responsive at the time the JWT is being
+   validated is a serious limitation in some use cases, two examples of
+   which are given below.
+
+   In this document, we define "Signed JWK Sets", a format for a
+   redistributable proof of authority for an issuer key.  As in OIDC and
+   SD-JWT-VC, we assume that issuers are identified by HTTPS URLs, or at
+   least by domain names.  A signed issuer key is then simply a JWT
+   whose payload contains the issuer key in question, and whose header
+   contains an X.509 certificate proving that the JWT-signing key is
+   authoritative for the issuer's domain name.
+
+   This design preserves the same trust model as in the HTTPS-based
+   proof of authority; it just swaps the signature in the TLS handshake
+   underlying HTTPS for an object signature.  Signed issuer keys are
+   thus "redistributable" in the same sense that an intermediate
+   certificate would be, so that they can be verified without the issuer
+   being online and reachable.
+
+   We also define a simple syntax for referencing signed issuer keys in
+   metadata documents such as OIDC Discovery metadata and SD-JWT-VC
+   issuer metadata.
+
+1.1.  Use Case: End-to-End Security
+
+   In applications using MLS for end-to-end security, endpoints can
+   authenticate to each other using Verifiable Credentials (VCs)
+   [I-D.barnes-mls-addl-creds].  These VCs are formatted as JWTs.  In
+   such applications, HTTPS-based proof of authority is an availability
+   risk to the application and to the VC issuer.
+
+   The risk to the application is clear: A client joining an MLS group
+   needs to validate the credentials of their peers.  If part of that
+   process entails making an HTTPS query to validate the authority of
+   the keys used to sign their peers' credentials, and the relevant
+   HTTPS server is down, then the client will not be able to join the
+   group and use the application.  Worse, since different peers may have
+   credentials from different issuers, an outage at any one of those
+   issuers can cause downtime for the application.
+
+   The use of HTTPS to validate authority also creates unnecessary load
+   on the VC issuer.  Consider, for example, an MLS-based video
+   conference with 1,000 participants presenting credentials from 10
+   different issuers, all of whom join at the start of the meeting.
+   This situation would create a spike of around 10,000 HTTPS requests
+   to the VC issuer.
+
+   With signed issuer keys, the clients in a meeting can bundle the
+   proof of authority along with their VC, avoiding the need for any
+   HTTPS interaction with the issuer at all.
+
+1.2.  Use Case: Verifying Stored Signatures
+
+   Some applications are interested in verifying historical signatures.
+   For example, a container registry might wish to demonstrate that a
+   container was signed by its author at some time in the past.
+
+   Live HTTPS-based proofs of authority are fundamentally incompatible
+   with these applications, since the proof of authority they produce
+   cannot be preserved and reused later.  With signed issuer keys, a
+   trusted timestamping authority is all that is needed to achieve the
+   desired properties.
+
+   Suppose the registry stores the following information for each
+   container:
+
+   *  A signature by the container author over the container
+
+   *  A JWT attesting to the container author's identity and public key,
+      e.g., a Verifiable Credential or an OpenPubkey PK Token
+      [OpenPubkey]
+
+   *  A Signed JWK Set providing the JWT issuer's key and proving its
+      authority for the issuer
+
+   *  An assertion by the timestamping authority that all of the above
+      artifacts existed at a time in the past when they were all valid
+
+   Based on the timetamping authority's assertion, a relying party can
+   validate that at the specified time, the container was signed by an
+   author with the specified identity, and that the identity was
+   asserted by the specified issuer.
+
+1.3.  Alternatives
+
+   An alternative design discussed in Section 3.5 of
+   [I-D.ietf-oauth-sd-jwt-vc] is to simply sign the based JWT with an
+   X.509 certified keys.  This design has a few drawbacks relative to
+   the design described here:
+
+   First, it changes the trust model relative to HTTPS-based proof of
+   authority.  The issuer JWT-signing key is removed as an intermediate
+   step.  This makes it more difficult for this design to coexist with
+   HTTPS-based proof of identity.
+
+   Second, it removes flexibility that allows for efficiency.  The extra
+   data of the X.509 certificate chain has to be sent every time the
+   base JWT is sent.  Allowing the two to be decoupled allows for more
+   flexible caching schemes.
+
+2.  Conventions and Definitions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  JWK Lifetimes
+
+   JWT issuers typically rotate their keys, so that each issuer key is
+   only used to sign JWTs for a specific period of time.  Making this
+   window known to Relying Parties can allow them guard against
+   compromise of retired keys.  If a Relying Party has a trustworthy
+   signal of when a JWT was issued (e.g., from a timestamp authority),
+   and the Relying Party knows when the Issuer was using the key that
+   signed the JWT, then the Relying Party can enforce that JWT signing
+   time is within the key usage window.
+
+   To communicate this window, this document defines nbf and exp fields
+   for JWKs with semantics analogous to the corresponding JWT claims.
+
+3.1.  "nbf" (Not Before) Parameter
+
+   The nbf (not before) parameter identifies the time at which the
+   holder of this key began using it.  When used with signature keys,
+   relying parties MUST reject an object signed by this key if the
+   object was signed before the time indicated in the nbf parameter.
+   Implementers MAY provide for some small leeway, usually no more than
+   a few minutes, to account for clock skew.  Its value MUST be a number
+   containing a NumericDate value.  Use of this parameter is OPTIONAL.
+
+3.2.  "exp" (Expiration Time) Parameter
+
+   The exp (expiration time) parameter identifies the time at which the
+   holder of this key stopped using it.  When used with signature keys,
+   relying parties MUST reject an object signed by this key if the
+   object was signed after the time indicated in the exp parameter.
+   Implementers MAY provide for some small leeway, usually no more than
+   a few minutes, to account for clock skew.  Its value MUST be a number
+   containing a NumericDate value.  Use of this parameter is OPTIONAL.
+
+4.  Signed JWK Set Format
+
+   A Signed JWK Set for a JWT issuer MUST meet the following
+   requirements:
+
+   *  The Signed JWK Set MUST be structured as a JWT [RFC7519] and
+      generally meet the requirements of that specification.
+
+   *  The x5c field of the Signed JWK Set MUST be populated with a
+      certificate chain that authenticates the domain name in the iss
+      field.  The domain name MUST appear as a dNSName entry in the
+      subjectAltName extension of the end-entity certificate.
+
+   *  The alg field of the Signed JWK Set MUST represent an algorithm
+      that is compatible with the subject public key of the certificate
+      in the x5c parameter.
+
+   *  The Signed JWK Set MUST contain an iss claim.  The value of the
+      iss claim MUST be the iss value that the issuer uses in JWTs that
+      it issues.  This value MUST be either a domain name or an HTTPS
+      URL.
+
+   *  The Signed JWK Set MUST contain a nbf and exp claims.
+
+   *  The Signed JWK Set MUST contain a jwks claim, whose value is the
+      issuer's JWK Set.
+
+   *  The JWKs in the jwks JWK Set SHOULD contain nbf and exp fields, as
+      described in Section 3.
+
+   *  The Signed JWK Set SHOULD NOT contain an aud claim.
+
+   Figure 1 shows the contents of the JWT header and JWT payload for an
+   example Signed JWK Set, omitting the full certificate chain:
+
+   JWT Header:
+   {
+     "alg": "ES256",
+     "typ": "JWT",
+     "x5c": ["MII..."]
+   }
+
+   JWT Payload:
+   {
+     "iat": 1667575982,
+     "exp": 1668180782,
+     "iss": "https://server.example.com",
+     "jwks": {
+       "keys": [{
+         "kty": "EC",
+         "crv": "P-256",
+         "alg": "ES256",
+         "nbf": 1710362112,
+         "exp": 1718325296,
+         "kid": "XTSGmh734_J6fOWUbI7BNim7wyvj5LWx8GzuIH7WHw8",
+         "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
+         "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
+       }]
+     }
+   }
+
+   JWS Signature:
+   //
+
+                         Figure 1: A Signed JWK Set
+
+   A Verifier that receives such a signed JWK Set validates it by taking
+   the following steps:
+
+   1.  If this Signed JWK Set was looked up using an iss value, verify
+       that the value of the iss claim in the Signed JWK Set is
+       identical to the one used to discover it.
+
+   2.  Verify that the JWT is currently valid, according to its nbf and
+       exp claims.
+
+   3.  Verify that the certificate chain in the x5c field is currently
+       valid from a trusted certificate authority (see
+       [@!RFC5280][@!RFC6125]).
+
+   4.  Verify that the end-entity certificate matches the iss field of
+       the Signed JWK Set.
+
+   5.  Verify the signature on the JWS using the subject public key of
+       the end-entity certificate
+
+5.  Referencing Signed JWK Sets
+
+   JWT issuers commonly advertise their JWK Sets using mechanisms such
+   as OpenID Connect Discovery or SD-JWT-VC Credential Issuer Metadata
+   [OIDC-Discovery] [I-D.ietf-oauth-sd-jwt-vc].  These discovery
+   mechanisms could be extended to also provide Signed JWK Sets, using
+   one of a few approaches.
+
+   Current discovery mechanisms typically present the issuer's JWK set
+   as a value or link embedded in the metadata object.  One could define
+   parallel fields in a metadata object to reference a provider's
+   current Signed JWK Set:
+
+   {
+       // Other metadata...
+
+       // Current mechanisms for unsigned JWKS
+       "jwks_uri": "https://example.com/jwks",
+       "jwks": { "keys": [ ... ] },
+
+       // New mechanisms for Signed JWK Sets
+       "signed_jwks_uri": "https://example.com/signed_jwks",
+       "signed_jwks": "eyJ...",
+   }
+
+           Figure 2: Referencing a Signed JWK Set like a JWK Set
+
+   Such a mechanism requires the issuer to list all of the keys that are
+   currently valid in one Signed JWK Set, requiring a Relying Party to
+   download the whole Signed JWK Set even if they are only interested in
+   one key.
+
+   An alternative design would allow for more specific Signed JWK Sets,
+   covering individual keys and referencing them by kid.  With such a
+   design, an issuer metadata object would contain a map like the
+   following (showing three keys with kid values "us-east-2024-01", "us-
+   west-2024-01", and "us-east-2024-04"):
+
+   {
+       // Other metadata...
+
+       "signed_jwks": {
+           "us-east-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+           "us-west-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+           "us-east-2024-04": "https://example.com/signed_jwks/us-east-2024-01",
+       }
+   }
+
+         Figure 3: Referencing individual Signed JWK Sets by Key ID
+
+6.  Security Considerations
+
+   [[ TODO - Security; lifetimes, revocation ]]
+
+7.  IANA Considerations
+
+   [[ TODO: Register nbf and exp as JWK fields ]]
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC7519]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web Token
+              (JWT)", RFC 7519, DOI 10.17487/RFC7519, May 2015,
+              <https://www.rfc-editor.org/rfc/rfc7519>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+8.2.  Informative References
+
+   [I-D.barnes-mls-addl-creds]
+              Barnes, R. and S. Nandakumar, "Additional MLS
+              Credentials", Work in Progress, Internet-Draft, draft-
+              barnes-mls-addl-creds-01, 4 March 2024,
+              <https://datatracker.ietf.org/doc/html/draft-barnes-mls-
+              addl-creds-01>.
+
+   [I-D.ietf-oauth-sd-jwt-vc]
+              Terbu, O., Fett, D., and B. Campbell, "SD-JWT-based
+              Verifiable Credentials (SD-JWT VC)", Work in Progress,
+              Internet-Draft, draft-ietf-oauth-sd-jwt-vc-03, 4 March
+              2024, <https://datatracker.ietf.org/doc/html/draft-ietf-
+              oauth-sd-jwt-vc-03>.
+
+   [OIDC-Discovery]
+              "OpenID Connect Discovery 1.0 incorporating errata set 2",
+              15 December 2023, <https://openid.net/specs/openid-
+              connect-discovery-1_0.html>.
+
+   [OpenPubkey]
+              "OpenPubkey", n.d.,
+              <https://www.bastionzero.com/openpubkey>.
+
+Acknowledgments
+
+   TODO acknowledge.
+
+Authors' Addresses
+
+   Richard L. Barnes
+   Cisco
+   Email: rlb@ipv.sx
+
+
+   Sharon Goldberg
+   BastionZero, Inc.
+   Email: goldbe@bastionzero.com
