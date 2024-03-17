@@ -174,9 +174,9 @@ signed the JWT, then the Relying Party can enforce that JWT signing time is
 within the key usage window.
 
 To communicate this window, this document defines `nbf` and `exp` fields for
-JWKs with semantics analogous to the corresponding JWT claims.  
+JWKs with semantics analogous to the corresponding JWT claims.
 
-## "nbf" (Not Before) Parameter 
+## "nbf" (Not Before) Parameter
 
 The `nbf` (not before) parameter identifies the time at which the holder of this
 key began using it.  When used with signature keys, relying parties MUST reject
@@ -256,7 +256,7 @@ JWT Payload:
 }
 
 JWS Signature:
-// 
+//
 ~~~
 {: #fig-example-jwks title="A Signed JWK Set" }
 
