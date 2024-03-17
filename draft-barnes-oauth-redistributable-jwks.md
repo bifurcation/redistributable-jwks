@@ -30,7 +30,7 @@ author:
     email: rlb@ipv.sx
  -
     fullname: Sharon Goldberg
-    organization: BastionZero
+    organization: BastionZero, Inc.
     email: goldbe@bastionzero.com
 
 normative:
@@ -52,9 +52,9 @@ in the "iss" claim of the JWT.  Today, relying parties commonly use the "iss"
 claim to fetch a set of authorized signing keys over HTTPS, relying on the
 security of HTTPS to establish the authority of the downloaded keys for that
 issuer.  The ephemerality of this proof of authority makes it unsuitable for
-certain use cases.  In this document, we define a format for Signed JWK Sets,
-which establish the authority of a key using a signed object instead of an HTTPS
-connection.
+use cases where a JWT might need to be verified for some time.  In this
+document, we define a format for Signed JWK Sets, which establish the authority
+of a key using a signed object instead of an HTTPS connection.
 
 --- middle
 
@@ -113,8 +113,8 @@ issuers can cause downtime for the application.
 The use of HTTPS to validate authority also creates unnecessary load on the VC
 issuer.  Consider, for example, an MLS-based video conference with 1,000
 participants presenting credentials from 10 different issuers, all of whom join
-at the start of the meeting.  This situation would create a spike of 10,000
-HTTPS requests to the VC issuer.
+at the start of the meeting.  This situation would create a spike of around
+10,000 HTTPS requests to the VC issuer.
 
 With signed issuer keys, the clients in a meeting can bundle the proof of
 authority along with their VC, avoiding the need for any HTTPS interaction with
@@ -124,7 +124,7 @@ the issuer at all.
 
 Some applications are interested in verifying historical signatures.  For
 example, a container registry might wish to demonstrate that a container was
-signed by its author a some time in the past.
+signed by its author at some time in the past.
 
 Live HTTPS-based proofs of authority are fundamentally incompatible with these
 applications, since the proof of authority they produce cannot be preserved and
@@ -135,7 +135,7 @@ Suppose the registry stores the following information for each container:
 
 * A signature by the container author over the container
 * A JWT attesting to the container author's identity and public key, e.g., a
-  Verifiable Credential or an OpenPubkey PKToken {{OpenPubkey}}
+  Verifiable Credential or an OpenPubkey PK Token {{OpenPubkey}}
 * A Signed JWK Set providing the JWT issuer's key and proving its authority
   for the issuer
 * An assertion by the timestamping authority that all of the above artifacts
@@ -168,7 +168,7 @@ Allowing the two to be decoupled allows for more flexible caching schemes.
 JWT issuers typically rotate their keys, so that each issuer key is only used to
 sign JWTs for a specific period of time.  Making this window known to Relying
 Parties can allow them guard against compromise of retired keys.  If a Relying
-Party has a reliable signal of when a JWT was produced (e.g., from a timestamp
+Party has a trustworthy signal of when a JWT was issued (e.g., from a timestamp
 authority), and the Relying Party knows when the Issuer was using the key that
 signed the JWT, then the Relying Party can enforce that JWT signing time is
 within the key usage window.
@@ -198,32 +198,35 @@ OPTIONAL.
 
 # Signed JWK Set Format
 
-A Signed JWK Set for a JWT issuer is a JWT of the following form:
+A Signed JWK Set for a JWT issuer MUST meet the following requirements:
 
-* The `iss` claim of the JWT MUST contain the `iss` value that the issuer uses
-  in JWTs that it issues.  This value MUST be either a domain name or an HTTPS
-  URL.
+* The Signed JWK Set MUST be structured as a JWT {{!RFC7519}} and generally meet
+  the requirements of that specification.
 
-* The `x5c` field of the JWT header MUST be populated with a certificate chain
-  that authenticates the domain name in the `iss` field.  The domain name MUST
-  appear as a `dNSName` entry in the `subjectAltName` extension of the
-  end-entity certificate.
+* The `iss` claim of the Signed JWK Set MUST contain the `iss` value that the
+  issuer uses in JWTs that it issues.  This value MUST be either a domain name
+  or an HTTPS URL.
+
+* The `x5c` field of the JWT header in a Signed JWK Set MUST be populated with a
+  certificate chain that authenticates the domain name in the `iss` field.  The
+  domain name MUST appear as a `dNSName` entry in the `subjectAltName` extension
+  of the end-entity certificate.
 
 * The `alg` field of the JWT header MUST represent an algorithm that is
   compatible with the subject public key of the certificate in the `x5c`
   parameter.
 
-* The JWT SHOULD NOT contain an `aud` claim.
+* The Signed JWK Set SHOULD NOT contain an `aud` claim.
 
-* The JWT MUST contain a `nbf` and `exp` claims.
+* The Signed JWK Set MUST contain a `nbf` and `exp` claims.
 
-* The JWT MUST conatin a `jwks` claim, whose value is the issuer's JWK Set.
+* The Signed JWK Set MUST contain a `jwks` claim, whose value is the issuer's
+  JWK Set.
 
 * The JWKs in the `jwks` JWK Set MAY contain `nbf` and `exp` fields, as
   described in {{jwk-lifetimes}}.
 
-An example Signed JWK Set is as  (omitting the
-full certificate chain):
+An example Signed JWK Set is as follows (omitting the full certificate chain):
 
 ~~~
 JWT Header:
