@@ -1,6 +1,6 @@
 ---
-title: "Redistributable JWK Sets"
-abbrev: "Redistributable JWKS"
+title: "Signed JWK Sets"
+abbrev: "Signed JWK Sets"
 category: info
 
 docname: draft-barnes-oauth-redistributable-jwks-latest
@@ -203,30 +203,30 @@ A Signed JWK Set for a JWT issuer MUST meet the following requirements:
 * The Signed JWK Set MUST be structured as a JWT {{!RFC7519}} and generally meet
   the requirements of that specification.
 
-* The `iss` claim of the Signed JWK Set MUST contain the `iss` value that the
-  issuer uses in JWTs that it issues.  This value MUST be either a domain name
-  or an HTTPS URL.
+* The `x5c` field of the Signed JWK Set MUST be populated with a certificate
+  chain that authenticates the domain name in the `iss` field.  The domain name
+  MUST appear as a `dNSName` entry in the `subjectAltName` extension of the
+  end-entity certificate.
 
-* The `x5c` field of the JWT header in a Signed JWK Set MUST be populated with a
-  certificate chain that authenticates the domain name in the `iss` field.  The
-  domain name MUST appear as a `dNSName` entry in the `subjectAltName` extension
-  of the end-entity certificate.
-
-* The `alg` field of the JWT header MUST represent an algorithm that is
+* The `alg` field of the Signed JWK Set MUST represent an algorithm that is
   compatible with the subject public key of the certificate in the `x5c`
   parameter.
 
-* The Signed JWK Set SHOULD NOT contain an `aud` claim.
+* The Signed JWK Set MUST contain an `iss` claim.  The value of the `iss` claim
+  MUST be the `iss` value that the issuer uses in JWTs that it issues.  This
+  value MUST be either a domain name or an HTTPS URL.
 
 * The Signed JWK Set MUST contain a `nbf` and `exp` claims.
 
 * The Signed JWK Set MUST contain a `jwks` claim, whose value is the issuer's
   JWK Set.
 
-* The JWKs in the `jwks` JWK Set MAY contain `nbf` and `exp` fields, as
+* The JWKs in the `jwks` JWK Set SHOULD contain `nbf` and `exp` fields, as
   described in {{jwk-lifetimes}}.
 
-An example Signed JWK Set is as follows (omitting the full certificate chain):
+* The Signed JWK Set SHOULD NOT contain an `aud` claim.
+
+{{fig-example-jwks}} shows the contents of the JWT header and JWT payload for an example Signed JWK Set, omitting the full certificate chain:
 
 ~~~
 JWT Header:
@@ -254,6 +254,9 @@ JWT Payload:
     }]
   }
 }
+
+JWS Signature:
+// 
 ~~~
 {: #fig-example-jwks title="A Signed JWK Set" }
 
@@ -283,8 +286,8 @@ Connect Discovery or SD-JWT-VC Credential Issuer Metadata {{OIDC-Discovery}}
 also provide Signed JWK Sets, using one of a few approaches.
 
 Current discovery mechanisms typically present the issuer's JWK set as a value
-or link embedded in the metadata object.  One could define parallel fields to
-reference a provider's current Signed JWK Set:
+or link embedded in the metadata object.  One could define parallel fields in a
+metadata object to reference a provider's current Signed JWK Set:
 
 ~~~ json
 {
@@ -299,13 +302,16 @@ reference a provider's current Signed JWK Set:
     "signed_jwks": "eyJ...",
 }
 ~~~
+{: fig-issuer-metadata title="Referencing a Signed JWK Set like a JWK Set"}
 
 Such a mechanism requires the issuer to list all of the keys that are currently
 valid in one Signed JWK Set, requiring a Relying Party to download the whole
 Signed JWK Set even if they are only interested in one key.
 
 An alternative design would allow for more specific Signed JWK Sets, covering
-individual keys and referencing them by `kid`:
+individual keys and referencing them by `kid`.  With such a design, an issuer
+metadata object would contain a map like the following (showing three keys with
+`kid` values "us-east-2024-01", "us-west-2024-01", and "us-east-2024-04"):
 
 ~~~ json
 {
@@ -318,6 +324,7 @@ individual keys and referencing them by `kid`:
     }
 }
 ~~~
+{: fig-issuer-metadata title="Referencing individual Signed JWK Sets by Key ID"}
 
 # Security Considerations
 
