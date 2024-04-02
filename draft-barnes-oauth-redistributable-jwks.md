@@ -281,6 +281,11 @@ following steps:
 1. Verify the signature on the PIKA using the subject public key of the
    end-entity certificate
 
+Before using a key in a PIKA to validate a JWT, a Verifier MUST verify that the
+time at which the JWT was signed (e.g., as expressed by its `iat` claim) is
+within the signing interval for the key.  This interval is expressed by the
+`iat` and `exp` fields within the key.
+
 # Referencing Proofs of Issuer Key Authority
 
 JWT issuers commonly advertise their JWK Sets using mechanisms such as OpenID
@@ -321,20 +326,38 @@ metadata object would contain a map like the following (showing three keys with
 
 ~~~ json
 {
-    // Other metadata...
+  // Other metadata...
 
-    "signed_jwks": {
-        "us-east-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
-        "us-west-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
-        "us-east-2024-04": "https://example.com/signed_jwks/us-east-2024-01",
-    }
+  "signed_jwks": {
+    "us-east-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+    "us-west-2024-01": "https://example.com/signed_jwks/us-east-2024-01",
+    "us-east-2024-04": "https://example.com/signed_jwks/us-east-2024-01",
+  }
 }
 ~~~
 {: #fig-specific-pikas title="Referencing individual PIKAs by Key ID"}
 
 # Security Considerations
 
-[[ TODO - Security; lifetimes, revocation ]]
+The main difference between establishing the authority of issuer keys via PIKA
+vs. via HTTPS is that where HTTPS is ephemeral, a PIKA can be redistribted and
+verfied for some period of time (until its `exp` time).  Issuers should exercise
+care in choosing the `exp` value they populate in a PIKA, in order to avoid a
+key being used beyond its intended lifetime.
+
+An issuer may wish to revoke a key, in the sense of instructing verifiers that
+they should no longer use the key to validate JWTs from the issuer.  PIKAs
+provide both implicit and explicit revocation.  With implicit revocation, the
+issuer simply removes the key from PIKAs it publishes.  With explicit
+revocation, the issuer adds a `revoked` field to the key, as described in
+{{OIDC-Federation}}.  In either case, the key will no longer be used by
+verifiers once all PIKAs positively authorizing the key have expired.
+
+The above properties imply an operational trade-off for issuers.  On the one
+hand, having shorter PIKA validity times means that the issuer can revoke keys
+more quickly.  On the other hand, having short PIKA validity times will require
+PIKAs to be signed more often, and result in higher load on endpoints by which
+PIKAs are distributed.
 
 --- back
 
