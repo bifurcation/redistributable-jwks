@@ -262,7 +262,7 @@ JWT Payload:
 JWT Signature:
 // Signature over JWT Header and Claims, as defined in RFC 7519
 ~~~
-{: #fig-example-jwks title="An example Proof of Issuer Key Authority" }
+{: #fig-example-pika title="An example Proof of Issuer Key Authority" }
 
 A Verifier that receives such a PIKA validates it by taking the
 following steps:
@@ -308,7 +308,7 @@ historical keys may be downloaded.  These mechanisms are illustrated in
     "jwks": { "keys": [ ... ] },
 
     // OpenID Federation historical keys
-    "federation_historical_keys_endpoint": "https://example.com/historical_keys", 
+    "federation_historical_keys_endpoint": "https://example.com/historical_keys",
 }
 ~~~
 {: #fig-issuer-metadata title="Current mechanisms for provided an issuer JWK Set"}
