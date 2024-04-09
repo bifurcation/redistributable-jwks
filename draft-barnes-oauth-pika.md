@@ -12,9 +12,9 @@ v: 3
 area: "Security"
 workgroup: "Web Authorization Protocol"
 keyword:
- - next generation
- - unicorn
- - sparkling distributed ledger
+ - openid
+ - verifiable credential
+ - openpubkey
 venue:
   group: "Web Authorization Protocol"
   type: "Working Group"
@@ -115,8 +115,8 @@ an object signature.  PIKAs are thus "redistributable" in the same
 sense that an intermediate certificate would be, so that they can be verified
 without the issuer being online and reachable.
 
-We also define a simple syntax for referencing signed issuer keys in metadata
-documents such as OIDC Discovery metadata and SD-JWT-VC issuer metadata.
+We also define a simple syntax for referencing PIKAs keys in metadata documents
+such as OIDC Discovery metadata and SD-JWT-VC issuer metadata.
 
 ## Use Case: End-to-End Security
 
@@ -139,9 +139,9 @@ participants presenting credentials from 10 different issuers, all of whom join
 at the start of the meeting.  This situation would create a spike of around
 10,000 HTTPS requests to the VC issuer.
 
-With signed issuer keys, the clients in a meeting can bundle the proof of
-authority along with their VC, avoiding the need for any HTTPS interaction with
-the issuer at all.
+With PIKAs, the clients in a meeting can bundle the proof of authority along
+with their VC, avoiding the need for any HTTPS interaction with the issuer at
+all.
 
 ## Use Case: Verifying Stored Signatures
 
@@ -151,7 +151,7 @@ signed by its author at some time in the past.
 
 Live HTTPS-based proofs of authority are fundamentally incompatible with these
 applications, since the proof of authority they produce cannot be preserved and
-reused later.  With signed issuer keys, a trusted timestamping authority is all
+reused later.  With PIKAs, a trusted timestamping authority is all
 that is needed to achieve the desired properties.
 
 Suppose the registry stores the following information for each container:
@@ -271,7 +271,7 @@ following steps:
    value of the `iss` claim in the PIKA is identical to the one used
    to discover it.
 
-1. Verify that the PIKA is currently valid, according to its `nbf` and `exp` claims.
+1. Verify that the PIKA is currently valid, according to its `iat` and `exp` claims.
 
 1. Verify that the certificate chain in the `x5c` field is currently valid from a trusted
    certificate authority (see [@!RFC5280][@!RFC6125]).
@@ -284,7 +284,7 @@ following steps:
 Before using a key in a PIKA to validate a JWT, a Verifier MUST verify that the
 time at which the JWT was signed (e.g., as expressed by its `iat` claim) is
 within the signing interval for the key.  This interval is expressed by the
-`iat` and `exp` fields within the key.
+`iat` and `exp` fields within the key attested to in the PIKA.
 
 # Referencing Proofs of Issuer Key Authority
 
@@ -296,8 +296,8 @@ also provide PIKAs, using one of a few approaches.
 Current discovery mechanisms typically present the issuer's JWK set as a value
 or link embedded in the metadata object.  Similarly, the Federation Historical
 Keys endpoint in OpenID Federation provides a link from which the issuer's
-historical keys may be downloaded.  These mechanisms are illustrated in
-{{fig-issuer-metadata}}.
+historical keys may be downloaded (see Section 5.1.1 of {{OIDC-Federation}).
+These mechanisms are illustrated in {{fig-issuer-metadata}}.
 
 ~~~ json
 {
@@ -336,6 +336,30 @@ metadata object would contain a map like the following (showing three keys with
 }
 ~~~
 {: #fig-specific-pikas title="Referencing individual PIKAs by Key ID"}
+
+A third possibility is that a PIKA could be referenced from the key itself.  For
+example, an issuer could publish a JWK set as normal, but add a link within each
+key to a PIKA that provides a proof of authority for that key.  In
+{{fig-linked-from-key}}, such links are provided in a `poa` field in the JWK
+(for "Proof of Authority").
+
+~~~ json
+{
+  "keys":
+    [
+      {
+        "kty": "EC",
+        "crv": "P-256",
+        "alg": "ES256"
+        "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
+        "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
+        "kid": "2HnoFS3YnC9tjiCaivhWLVUJ3AxwGGz_98uRFaqMEEs",
+        "poa": "https://example.com/poa/2HnoFS3YnC9tjiCa"
+      },
+    ]
+}
+~~~
+{: #fig-linked-from-key title="Referncing a PIKA from a JWK in a JWK Set" }
 
 # Security Considerations
 
