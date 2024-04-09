@@ -19,9 +19,9 @@ define a format for Proofs of Issuer Key Authority, which establish the
 authority of a key using a signed object instead of an HTTPS connection. 
     ' name="description">
 <meta content="xml2rfc 3.20.1" name="generator">
-<meta content="next generation" name="keyword">
-<meta content="unicorn" name="keyword">
-<meta content="sparkling distributed ledger" name="keyword">
+<meta content="openid" name="keyword">
+<meta content="verifiable credential" name="keyword">
+<meta content="openpubkey" name="keyword">
 <meta content="draft-barnes-oauth-pika-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.20.1
@@ -1040,7 +1040,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Barnes &amp; Goldberg</td>
-<td class="center">Expires 4 October 2024</td>
+<td class="center">Expires 11 October 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1053,12 +1053,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-barnes-oauth-pika-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-04-02" class="published">2 April 2024</time>
+<time datetime="2024-04-09" class="published">9 April 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-10-04">4 October 2024</time></dd>
+<dd class="expires"><time datetime="2024-10-11">11 October 2024</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1120,7 +1120,7 @@ authority of a key using a signed object instead of an HTTPS connection.<a href=
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 4 October 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 11 October 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1273,8 +1273,8 @@ authority; it just swaps the signature in the TLS handshake underlying HTTPS for
 an object signature.  PIKAs are thus "redistributable" in the same
 sense that an intermediate certificate would be, so that they can be verified
 without the issuer being online and reachable.<a href="#section-1-6" class="pilcrow">¶</a></p>
-<p id="section-1-7">We also define a simple syntax for referencing signed issuer keys in metadata
-documents such as OIDC Discovery metadata and SD-JWT-VC issuer metadata.<a href="#section-1-7" class="pilcrow">¶</a></p>
+<p id="section-1-7">We also define a simple syntax for referencing PIKAs keys in metadata documents
+such as OIDC Discovery metadata and SD-JWT-VC issuer metadata.<a href="#section-1-7" class="pilcrow">¶</a></p>
 <div id="use-case-end-to-end-security">
 <section id="section-1.1">
         <h3 id="name-use-case-end-to-end-securit">
@@ -1296,9 +1296,9 @@ issuer.  Consider, for example, an MLS-based video conference with 1,000
 participants presenting credentials from 10 different issuers, all of whom join
 at the start of the meeting.  This situation would create a spike of around
 10,000 HTTPS requests to the VC issuer.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
-<p id="section-1.1-4">With signed issuer keys, the clients in a meeting can bundle the proof of
-authority along with their VC, avoiding the need for any HTTPS interaction with
-the issuer at all.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">With PIKAs, the clients in a meeting can bundle the proof of authority along
+with their VC, avoiding the need for any HTTPS interaction with the issuer at
+all.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="use-case-verifying-stored-signatures">
@@ -1311,7 +1311,7 @@ example, a container registry might wish to demonstrate that a container was
 signed by its author at some time in the past.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
 <p id="section-1.2-2">Live HTTPS-based proofs of authority are fundamentally incompatible with these
 applications, since the proof of authority they produce cannot be preserved and
-reused later.  With signed issuer keys, a trusted timestamping authority is all
+reused later.  With PIKAs, a trusted timestamping authority is all
 that is needed to achieve the desired properties.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
 <p id="section-1.2-3">Suppose the registry stores the following information for each container:<a href="#section-1.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1463,7 +1463,7 @@ value of the <code>iss</code> claim in the PIKA is identical to the one used
 to discover it.<a href="#section-3-8.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-8.2">
-          <p id="section-3-8.2.1">Verify that the PIKA is currently valid, according to its <code>nbf</code> and <code>exp</code> claims.<a href="#section-3-8.2.1" class="pilcrow">¶</a></p>
+          <p id="section-3-8.2.1">Verify that the PIKA is currently valid, according to its <code>iat</code> and <code>exp</code> claims.<a href="#section-3-8.2.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-3-8.3">
           <p id="section-3-8.3.1">Verify that the certificate chain in the <code>x5c</code> field is currently valid from a trusted
@@ -1480,7 +1480,7 @@ end-entity certificate<a href="#section-3-8.5.1" class="pilcrow">¶</a></p>
 <p id="section-3-9">Before using a key in a PIKA to validate a JWT, a Verifier <span class="bcp14">MUST</span> verify that the
 time at which the JWT was signed (e.g., as expressed by its <code>iat</code> claim) is
 within the signing interval for the key.  This interval is expressed by the
-<code>iat</code> and <code>exp</code> fields within the key.<a href="#section-3-9" class="pilcrow">¶</a></p>
+<code>iat</code> and <code>exp</code> fields within the key attested to in the PIKA.<a href="#section-3-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="referencing-proofs-of-issuer-key-authority">
@@ -1495,8 +1495,8 @@ also provide PIKAs, using one of a few approaches.<a href="#section-4-1" class="
 <p id="section-4-2">Current discovery mechanisms typically present the issuer's JWK set as a value
 or link embedded in the metadata object.  Similarly, the Federation Historical
 Keys endpoint in OpenID Federation provides a link from which the issuer's
-historical keys may be downloaded.  These mechanisms are illustrated in
-<a href="#fig-issuer-metadata" class="auto internal xref">Figure 3</a>.<a href="#section-4-2" class="pilcrow">¶</a></p>
+historical keys may be downloaded (see Section 5.1.1 of <span>[<a href="#OIDC-Federation" class="cite xref">OIDC-Federation</a>]</span>).
+These mechanisms are illustrated in <a href="#fig-issuer-metadata" class="auto internal xref">Figure 3</a>.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <span id="name-current-mechanisms-for-prov"></span><div id="fig-issuer-metadata">
 <figure id="figure-3">
         <div class="lang-json sourcecode" id="section-4-3.1">
@@ -1543,6 +1543,35 @@ metadata object would contain a map like the following (showing three keys with
 </div>
 <figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
 <a href="#name-referencing-individual-pika" class="selfRef">Referencing individual PIKAs by Key ID</a>
+        </figcaption></figure>
+</div>
+<p id="section-4-7">A third possibility is that a PIKA could be referenced from the key itself.  For
+example, an issuer could publish a JWK set as normal, but add a link within each
+key to a PIKA that provides a proof of authority for that key.  In
+<a href="#fig-linked-from-key" class="auto internal xref">Figure 5</a>, such links are provided in a <code>poa</code> field in the JWK
+(for "Proof of Authority").<a href="#section-4-7" class="pilcrow">¶</a></p>
+<span id="name-referncing-a-pika-from-a-jw"></span><div id="fig-linked-from-key">
+<figure id="figure-5">
+        <div class="lang-json sourcecode" id="section-4-8.1">
+<pre>
+{
+  "keys":
+    [
+      {
+        "kty": "EC",
+        "crv": "P-256",
+        "alg": "ES256"
+        "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
+        "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
+        "kid": "2HnoFS3YnC9tjiCaivhWLVUJ3AxwGGz_98uRFaqMEEs",
+        "poa": "https://example.com/poa/2HnoFS3YnC9tjiCa"
+      },
+    ]
+}
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-referncing-a-pika-from-a-jw" class="selfRef">Referncing a PIKA from a JWK in a JWK Set</a>
         </figcaption></figure>
 </div>
 </section>
