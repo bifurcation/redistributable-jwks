@@ -337,30 +337,6 @@ metadata object would contain a map like the following (showing three keys with
 ~~~
 {: #fig-specific-pikas title="Referencing individual PIKAs by Key ID"}
 
-A third possibility is that a PIKA could be referenced from the key itself.  For
-example, an issuer could publish a JWK set as normal, but add a link within each
-key to a PIKA that provides a proof of authority for that key.  In
-{{fig-linked-from-key}}, such links are provided in a `poa` field in the JWK
-(for "Proof of Authority").
-
-~~~ json
-{
-  "keys":
-    [
-      {
-        "kty": "EC",
-        "crv": "P-256",
-        "alg": "ES256"
-        "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
-        "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
-        "kid": "2HnoFS3YnC9tjiCaivhWLVUJ3AxwGGz_98uRFaqMEEs",
-        "poa": "https://example.com/poa/2HnoFS3YnC9tjiCa"
-      },
-    ]
-}
-~~~
-{: #fig-linked-from-key title="Referncing a PIKA from a JWK in a JWK Set" }
-
 # Security Considerations
 
 The main difference between establishing the authority of issuer keys via PIKA
