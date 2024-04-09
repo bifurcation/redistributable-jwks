@@ -1545,35 +1545,6 @@ metadata object would contain a map like the following (showing three keys with
 <a href="#name-referencing-individual-pika" class="selfRef">Referencing individual PIKAs by Key ID</a>
         </figcaption></figure>
 </div>
-<p id="section-4-7">A third possibility is that a PIKA could be referenced from the key itself.  For
-example, an issuer could publish a JWK set as normal, but add a link within each
-key to a PIKA that provides a proof of authority for that key.  In
-<a href="#fig-linked-from-key" class="auto internal xref">Figure 5</a>, such links are provided in a <code>poa</code> field in the JWK
-(for "Proof of Authority").<a href="#section-4-7" class="pilcrow">¶</a></p>
-<span id="name-referncing-a-pika-from-a-jw"></span><div id="fig-linked-from-key">
-<figure id="figure-5">
-        <div class="lang-json sourcecode" id="section-4-8.1">
-<pre>
-{
-  "keys":
-    [
-      {
-        "kty": "EC",
-        "crv": "P-256",
-        "alg": "ES256"
-        "x": "qiGKLwXRJmJR_AOQpWOHXLX5uYIfzvPwDurWvmZBwvw",
-        "y": "ip8nyuLpJ5NpriZzCVKiG0TteqPMkrzfNOUQ8YzeGdk"
-        "kid": "2HnoFS3YnC9tjiCaivhWLVUJ3AxwGGz_98uRFaqMEEs",
-        "poa": "https://example.com/poa/2HnoFS3YnC9tjiCa"
-      },
-    ]
-}
-</pre>
-</div>
-<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
-<a href="#name-referncing-a-pika-from-a-jw" class="selfRef">Referncing a PIKA from a JWK in a JWK Set</a>
-        </figcaption></figure>
-</div>
 </section>
 </div>
 <div id="security-considerations">
