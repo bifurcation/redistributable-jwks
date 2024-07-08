@@ -18,25 +18,24 @@ cases where a JWT might need to be verified for some time.  In this document, we
 define a format for Proofs of Issuer Key Authority, which establish the
 authority of a key using a signed object instead of an HTTPS connection. 
     ' name="description">
-<meta content="xml2rfc 3.20.1" name="generator">
+<meta content="xml2rfc 3.22.0" name="generator">
 <meta content="openid" name="keyword">
 <meta content="verifiable credential" name="keyword">
 <meta content="openpubkey" name="keyword">
 <meta content="draft-barnes-oauth-pika-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.20.1
-    Python 3.11.8
+  xml2rfc 3.22.0
+    Python 3.12.3
     ConfigArgParse 1.7
     google-i18n-address 3.1.0
     intervaltree 3.1.0
-    Jinja2 3.1.2
-    lxml 4.9.3
-    platformdirs 4.2.0
+    Jinja2 3.1.4
+    lxml 4.9.4
+    platformdirs 4.2.2
     pycountry 22.3.5
     PyYAML 6.0.1
-    requests 2.31.0
-    setuptools 68.2.2
-    six 1.16.0
+    requests 2.32.3
+    setuptools 69.5.1
     wcwidth 0.2.13
 -->
 <link href="draft-barnes-oauth-pika.xml" rel="alternate" type="application/rfc+xml">
@@ -1036,11 +1035,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">PIKA</td>
-<td class="right">April 2024</td>
+<td class="right">July 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Barnes &amp; Goldberg</td>
-<td class="center">Expires 11 October 2024</td>
+<td class="center">Expires 9 January 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1053,12 +1052,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-barnes-oauth-pika-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-04-09" class="published">9 April 2024</time>
+<time datetime="2024-07-08" class="published">8 July 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-10-11">11 October 2024</time></dd>
+<dd class="expires"><time datetime="2025-01-09">9 January 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1120,7 +1119,7 @@ authority of a key using a signed object instead of an HTTPS connection.<a href=
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 October 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 9 January 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1174,6 +1173,14 @@ authority of a key using a signed object instead of an HTTPS connection.<a href=
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
             <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-durability-of-key-authority" class="internal xref">Durability of Key Authority</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-signing-key-compromise" class="internal xref">Signing Key Compromise</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
             <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-references" class="internal xref">References</a></p>
@@ -1211,7 +1218,7 @@ Connect Discovery <span>[<a href="#OIDC-Discovery" class="cite xref">OIDC-Discov
 from which issuer metadata is downloaded over HTTPS.  The issuer's JWK set is
 linked via the <code>jwks_uri</code> field in the metadata.  The SD-JWT-VC specification
 describes a similar HTTPS-based mechanism for discovering the valid keys for an
-issuer (see <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-03#section-5" class="relref">Section 5</a> of [<a href="#I-D.ietf-oauth-sd-jwt-vc" class="cite xref">I-D.ietf-oauth-sd-jwt-vc</a>]</span>).<a href="#section-1-2" class="pilcrow">¶</a></p>
+issuer (see <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-04#section-5" class="relref">Section 5</a> of [<a href="#I-D.ietf-oauth-sd-jwt-vc" class="cite xref">I-D.ietf-oauth-sd-jwt-vc</a>]</span>).<a href="#section-1-2" class="pilcrow">¶</a></p>
 <p id="section-1-3">These HTTPS-based authority mechanisms are "live", in the sense that they can
 only prove the authority of a key to someone who does an HTTPS transaction with
 the relevant server.  The fact that the server needs to be reachable and
@@ -1341,7 +1348,7 @@ specified identity, and that the identity was asserted by the specified issuer.<
         <h3 id="name-alternatives">
 <a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-alternatives" class="section-name selfRef">Alternatives</a>
         </h3>
-<p id="section-1.3-1">An alternative design discussed in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-03#section-3.5" class="relref">Section 3.5</a> of [<a href="#I-D.ietf-oauth-sd-jwt-vc" class="cite xref">I-D.ietf-oauth-sd-jwt-vc</a>]</span>
+<p id="section-1.3-1">An alternative design discussed in <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-04#section-3.5" class="relref">Section 3.5</a> of [<a href="#I-D.ietf-oauth-sd-jwt-vc" class="cite xref">I-D.ietf-oauth-sd-jwt-vc</a>]</span>
 is to simply sign the based JWT with an X.509 certified keys.  This design has a
 few drawbacks relative to the design described here:<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <p id="section-1.3-2">First, it changes the trust model relative to HTTPS-based proof of authority.
@@ -1552,23 +1559,64 @@ metadata object would contain a map like the following (showing three keys with
       <h2 id="name-security-considerations">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-5-1">The main difference between establishing the authority of issuer keys via PIKA
+<div id="durability-of-key-authority">
+<section id="section-5.1">
+        <h3 id="name-durability-of-key-authority">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-durability-of-key-authority" class="section-name selfRef">Durability of Key Authority</a>
+        </h3>
+<p id="section-5.1-1">The main difference between establishing the authority of issuer keys via PIKA
 vs. via HTTPS is that where HTTPS is ephemeral, a PIKA can be redistribted and
 verfied for some period of time (until its <code>exp</code> time).  Issuers should exercise
 care in choosing the <code>exp</code> value they populate in a PIKA, in order to avoid a
-key being used beyond its intended lifetime.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">An issuer may wish to revoke a key, in the sense of instructing verifiers that
+key being used beyond its intended lifetime.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">An issuer may wish to revoke a key, in the sense of instructing verifiers that
 they should no longer use the key to validate JWTs from the issuer.  PIKAs
 provide both implicit and explicit revocation.  With implicit revocation, the
 issuer simply removes the key from PIKAs it publishes.  With explicit
 revocation, the issuer adds a <code>revoked</code> field to the key, as described in
 <span>[<a href="#OIDC-Federation" class="cite xref">OIDC-Federation</a>]</span>.  In either case, the key will no longer be used by
-verifiers once all PIKAs positively authorizing the key have expired.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<p id="section-5-3">The above properties imply an operational trade-off for issuers.  On the one
+verifiers once all PIKAs positively authorizing the key have expired.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.1-3">The above properties imply an operational trade-off for issuers.  On the one
 hand, having shorter PIKA validity times means that the issuer can revoke keys
 more quickly.  On the other hand, having short PIKA validity times will require
 PIKAs to be signed more often, and result in higher load on endpoints by which
-PIKAs are distributed.<a href="#section-5-3" class="pilcrow">¶</a></p>
+PIKAs are distributed.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="signing-key-compromise">
+<section id="section-5.2">
+        <h3 id="name-signing-key-compromise">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-signing-key-compromise" class="section-name selfRef">Signing Key Compromise</a>
+        </h3>
+<p id="section-5.2-1">A related problem arises from the fact that PIKAs are signed with the same sort
+of certificates that are used in HTTPS, i.e., certficiates that attest to domain
+names.  An OP's web servers will be facing the Internet, and thus at greater
+risk of compromise than a more highly protected server in the OP's
+infrastructure.  Compromising an OP's web server could provide the attacker with
+access to the signing key with which they could issue a bogus PIKA for the OP,
+containing an attacker-chosen public key.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-5.2-2.1">
+            <p id="section-5.2-2.1.1"><strong>NOTE:</strong> There are several ways to mitigate this risk:<a href="#section-5.2-2.1.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.2-2.1.2.1">
+                <p id="section-5.2-2.1.2.1.1">We could make PIKA-signing certificates distinct from HTTPS certs, e.g., by
+means of a new extKeyUsage (EKU) value.  This would be a significant
+deployment barrier, since CAs would have to be willing to issue the
+PIKA-compatible certificates.<a href="#section-5.2-2.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-5.2-2.1.2.2">
+                <p id="section-5.2-2.1.2.2.1">We could use a distinct domain name for PIKA-signing certs, so that an OP
+would be unlikely to create a cert for that domain name other than for PIKA
+signing.  For example, the validation rules could require the certificate to
+authenticate <code>_pika.example.com</code> instead of <code>example.com</code> for the issuer URL
+<code>https://example.com/oauth2/</code>.<a href="#section-5.2-2.1.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</li>
+        </ul>
+</section>
+</div>
 </section>
 </div>
 <section id="section-6">
@@ -1612,7 +1660,7 @@ PIKAs are distributed.<a href="#section-5-3" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 <dt id="I-D.ietf-oauth-sd-jwt-vc">[I-D.ietf-oauth-sd-jwt-vc]</dt>
         <dd>
-<span class="refAuthor">Terbu, O.</span>, <span class="refAuthor">Fett, D.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"SD-JWT-based Verifiable Credentials (SD-JWT VC)"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-sd-jwt-vc-03</span>, <time datetime="2024-03-04" class="refDate">4 March 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-03">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-03</a>&gt;</span>. </dd>
+<span class="refAuthor">Terbu, O.</span>, <span class="refAuthor">Fett, D.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"SD-JWT-based Verifiable Credentials (SD-JWT VC)"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-sd-jwt-vc-04</span>, <time datetime="2024-07-08" class="refDate">8 July 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-04">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-sd-jwt-vc-04</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OIDC-Discovery">[OIDC-Discovery]</dt>
         <dd>

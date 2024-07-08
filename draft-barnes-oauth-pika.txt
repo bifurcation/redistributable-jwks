@@ -5,8 +5,8 @@
 Web Authorization Protocol                                  R. L. Barnes
 Internet-Draft                                                     Cisco
 Intended status: Informational                               S. Goldberg
-Expires: 11 October 2024                               BastionZero, Inc.
-                                                            9 April 2024
+Expires: 9 January 2025                                BastionZero, Inc.
+                                                             8 July 2024
 
 
                   Proof of Issuer Key Authority (PIKA)
@@ -59,7 +59,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 October 2024.
+   This Internet-Draft will expire on 9 January 2025.
 
 Copyright Notice
 
@@ -85,6 +85,8 @@ Table of Contents
    3.  Proof of Issuer Key Authority Format
    4.  Referencing Proofs of Issuer Key Authority
    5.  Security Considerations
+     5.1.  Durability of Key Authority
+     5.2.  Signing Key Compromise
    6.  References
      6.1.  Normative References
      6.2.  Informative References
@@ -396,6 +398,8 @@ Table of Contents
 
 5.  Security Considerations
 
+5.1.  Durability of Key Authority
+
    The main difference between establishing the authority of issuer keys
    via PIKA vs. via HTTPS is that where HTTPS is ephemeral, a PIKA can
    be redistribted and verfied for some period of time (until its exp
@@ -417,6 +421,31 @@ Table of Contents
    issuer can revoke keys more quickly.  On the other hand, having short
    PIKA validity times will require PIKAs to be signed more often, and
    result in higher load on endpoints by which PIKAs are distributed.
+
+5.2.  Signing Key Compromise
+
+   A related problem arises from the fact that PIKAs are signed with the
+   same sort of certificates that are used in HTTPS, i.e., certficiates
+   that attest to domain names.  An OP's web servers will be facing the
+   Internet, and thus at greater risk of compromise than a more highly
+   protected server in the OP's infrastructure.  Compromising an OP's
+   web server could provide the attacker with access to the signing key
+   with which they could issue a bogus PIKA for the OP, containing an
+   attacker-chosen public key.
+
+      *NOTE:* There are several ways to mitigate this risk:
+
+      -  We could make PIKA-signing certificates distinct from HTTPS
+         certs, e.g., by means of a new extKeyUsage (EKU) value.  This
+         would be a significant deployment barrier, since CAs would have
+         to be willing to issue the PIKA-compatible certificates.
+
+      -  We could use a distinct domain name for PIKA-signing certs, so
+         that an OP would be unlikely to create a cert for that domain
+         name other than for PIKA signing.  For example, the validation
+         rules could require the certificate to authenticate
+         _pika.example.com instead of example.com for the issuer URL
+         https://example.com/oauth2/.
 
 6.  References
 
@@ -451,9 +480,9 @@ Table of Contents
    [I-D.ietf-oauth-sd-jwt-vc]
               Terbu, O., Fett, D., and B. Campbell, "SD-JWT-based
               Verifiable Credentials (SD-JWT VC)", Work in Progress,
-              Internet-Draft, draft-ietf-oauth-sd-jwt-vc-03, 4 March
+              Internet-Draft, draft-ietf-oauth-sd-jwt-vc-04, 8 July
               2024, <https://datatracker.ietf.org/doc/html/draft-ietf-
-              oauth-sd-jwt-vc-03>.
+              oauth-sd-jwt-vc-04>.
 
    [OIDC-Discovery]
               "OpenID Connect Discovery 1.0 incorporating errata set 2",
