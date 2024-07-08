@@ -339,6 +339,8 @@ metadata object would contain a map like the following (showing three keys with
 
 # Security Considerations
 
+## Durability of Key Authority
+
 The main difference between establishing the authority of issuer keys via PIKA
 vs. via HTTPS is that where HTTPS is ephemeral, a PIKA can be redistribted and
 verfied for some period of time (until its `exp` time).  Issuers should exercise
@@ -359,11 +361,32 @@ more quickly.  On the other hand, having short PIKA validity times will require
 PIKAs to be signed more often, and result in higher load on endpoints by which
 PIKAs are distributed.
 
+## Signing Key Compromise
+
+A related problem arises from the fact that PIKAs are signed with the same sort
+of certificates that are used in HTTPS, i.e., certficiates that attest to domain
+names.  An OP's web servers will be facing the Internet, and thus at greater
+risk of compromise than a more highly protected server in the OP's
+infrastructure.  Compromising an OP's web server could provide the attacker with
+access to the signing key with which they could issue a bogus PIKA for the OP,
+containing an attacker-chosen public key.
+
+> **NOTE:** There are several ways to mitigate this risk:
+>
+> * We could make PIKA-signing certificates distinct from HTTPS certs, e.g., by
+>   means of a new extKeyUsage (EKU) value.  This would be a significant
+>   deployment barrier, since CAs would have to be willing to issue the
+>   PIKA-compatible certificates.
+>
+> * We could use a distinct domain name for PIKA-signing certs, so that an OP
+>   would be unlikely to create a cert for that domain name other than for PIKA
+>   signing.  For example, the validation rules could require the certificate to
+>   authenticate `_pika.example.com` instead of `example.com` for the issuer URL
+>   `https://example.com/oauth2/`.
+
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
 TODO acknowledge.
-
-
