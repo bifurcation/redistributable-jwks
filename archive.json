@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-10-27T00:07:44.702802+00:00",
+  "timestamp": "2024-10-29T00:07:14.317142+00:00",
   "repo": "bifurcation/redistributable-jwks",
   "labels": [
     {
@@ -49,7 +49,24 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 2,
+      "id": "I_kwDOLe4QB86cDODz",
+      "title": "signed_jwks keys all reference the same url",
+      "url": "https://github.com/bifurcation/redistributable-jwks/issues/2",
+      "state": "OPEN",
+      "author": "arndt-s",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Probably a typo. In section 4 the example is the following:\r\n\r\n```json\r\n\"signed_jwks\": {\r\n       \"us-east-2024-01\": \"https://example.com/signed_jwks/us-east-2024-01\",\r\n       \"us-west-2024-01\": \"https://example.com/signed_jwks/us-east-2024-01\",\r\n       \"us-east-2024-04\": \"https://example.com/signed_jwks/us-east-2024-01\",\r\n     }\r\n```\r\n\r\nall keys (us-..) point to the same URL. Is this deliberate?",
+      "createdAt": "2024-10-28T11:05:54Z",
+      "updatedAt": "2024-10-28T11:05:54Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
   "pulls": [
     {
       "number": 1,
